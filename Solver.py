@@ -61,8 +61,3 @@ class SolveSudoku:
                     self.s_hold[s] = self.s_hold[s][:-1]
                     self.empty.insert(0, (x, y))
         return False
-
-print(np.array(m_board))
-print()
-SolveSudoku(m_board) #Solve game in place
-print(np.array(m_board))

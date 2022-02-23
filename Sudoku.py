@@ -1,39 +1,56 @@
 import numpy as np
-from copy import deepcopy
-from random import choices
+from random import shuffle
 
 class Sudoku:
     def __init__(self, size=9, square=3):
         self.size = size
         self.square = square
-        self.board = self.generate_board()
+        self.x_hold = {}
+        self.y_hold = {}
+        self.s_hold = {}
+        self.placed = [(x, y) for y in range(9) for x in range(9)]
+        self.p_nums = [str(i + 1) for i in range(self.size)]
+        self.board = [[]]
+        self.generate_board()
         
     def generate_board(self):
-        p_nums = [str(i + 1) for i in range(self.size)]
-        #Build solvable game board
-        while True:
-            check = True
-            x_hold = [[] for _ in range(self.size)]
-            y_hold = [[] for _ in range(self.size)]
-            s_hold = [[] for _ in range(self.square ** 2)]
-            self.board = [['.' for _ in range(self.size)] for _ in range(self.size)]
-            for y in range(self.size):
-                for x in range(self.size):
-                    m_nums = [n for n in p_nums if n not in s_hold[(x // self.square) + ((y // self.square) * self.square)] and n not in y_hold[y] and n not in x_hold[x]]
-                    if len(m_nums) > 0:
-                        num = choices(m_nums, k=1)[0]
-                        self.board[y][x] = num
-                        x_hold[x].append(num)
-                        y_hold[y].append(num)
-                        s_hold[(x // self.square) + ((y // self.square) * self.square)].append(num)
+        if len(self.placed) == 0:
+            return True
+        x, y = self.placed[0]
+        s = (x // self.square) + ((y // self.square) * self.square)
+        m_nums = [n for n in self.p_nums if (s not in self.s_hold or n not in self.s_hold[s]) and (x not in self.y_hold or n not in self.y_hold[x]) and (y not in self.x_hold or n not in self.x_hold[y])]
+        if len(m_nums) > 0:
+            shuffle(m_nums)
+            for n in m_nums:
+                self.placed = self.placed[1:]
+                if len(self.board) >= y + 1:
+                    if len(self.board[y]) >= x + 1:
+                        self.board[y][x] = n
                     else:
-                        check = False
-                        break
-                if check == False:
-                    break
-            if check == True:
-                break
-        return self.board
+                        self.board[y].append(n)
+                else:
+                    self.board.append([n])
+                if x in self.y_hold:
+                    self.y_hold[x].append(n)
+                else:
+                    self.y_hold[x] = [n]
+                if y in self.x_hold:
+                    self.x_hold[y].append(n)
+                else:
+                    self.x_hold[y] = [n]
+                if s in self.s_hold:
+                    self.s_hold[s].append(n)
+                else:
+                    self.s_hold[s] = [n]
+                if self.generate_board():
+                    return True
+                else:
+                    self.placed.insert(0, (x, y))
+                    self.y_hold[x] = self.y_hold[x][:-1]
+                    self.x_hold[y] = self.x_hold[y][:-1]
+                    self.s_hold[s] = self.s_hold[s][:-1]
+                    self.board[y][x] = '.'
+        return False
     
     def mask_board(self, i_choice = [1, 3]):
         p_nums = [i for i in range(self.size)]
@@ -45,8 +62,11 @@ class Sudoku:
 game = Sudoku()
 
 solution = game.board
-game.mask_board([1, 4])
+print(np.array(solution))
+game.mask_board([5,8])
 m_board = game.board
+print()
+print(np.array(m_board))
 
 class SolveSudoku:
     def __init__(self, board, square=3):

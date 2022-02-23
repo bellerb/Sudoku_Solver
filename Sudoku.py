@@ -48,69 +48,71 @@ solution = game.board
 game.mask_board([1, 4])
 m_board = game.board
 
-def search_tree(p_moves, board, x_hold, y_hold, s_hold, p_nums, square=3, y=0, x=0):
-    if x == 9:
-        y += 1
-        x = 0
-    if (y < len(x_hold) and x < len(y_hold) and (x // square) + ((y // square) * square) < len(s_hold)):
-        if board[y][x] == '.':
-            for p in p_moves[y][x]:
-                if p not in x_hold[y] and p not in y_hold[x] and p not in s_hold[(x // square) + ((y // square) * square)]:
-                    temp_board = deepcopy(board)
-                    temp_x_hold = deepcopy(x_hold)
-                    temp_y_hold = deepcopy(y_hold)
-                    temp_s_hold = deepcopy(s_hold)
-                    
-                    temp_board[y][x] = p
-                    temp_x_hold[y].append(p)
-                    temp_y_hold[x].append(p)
-                    temp_s_hold[(x // square) + ((y // square) * square)].append(p)
-                    temp_board = search_tree(p_moves, temp_board, temp_x_hold, temp_y_hold, temp_s_hold, p_nums=p_nums, square=square, y=y, x=x+1)
-                    if temp_board is not None and True not in [True for r in temp_board if '.' in r]:
-                        return temp_board
-        else:
-            temp_board = search_tree(p_moves, board, x_hold, y_hold, s_hold, p_nums=p_nums, square=square, y=y, x=x+1)
-            if temp_board is not None and True not in [True for r in temp_board if '.' in r]:
-                return temp_board
-    if board is not None and True not in [True for r in board if '.' in r]:
-        return board
-    else:
-        return None
-    
-
-def solve_game(board, square=3):
-    p_nums = [str(i + 1) for i in range(9)]
-    x_hold = [[] for _ in range(9)]
-    y_hold = [[] for _ in range(9)]
-    s_hold = [[] for _ in range(square ** 2)]
-    
-    p_board = []
-    for l in range(2):
-        for y in range(len(board)):
-            if l == 1:
-                p_board.append([])
-            for x in range(len(board[y])):
-                if l == 0:
-                    if board[y][x] != '.':
-                        x_hold[y].append(board[y][x])
-                        y_hold[x].append(board[y][x])
-                        s_hold[(x // square) + ((y // square) * square)].append(board[y][x])
-                else:
-                    if board[y][x] == '.':
-                        pos_hold = [n for n in p_nums if n not in s_hold[(x // 3) + ((y // 3) * 3)] and n not in y_hold[x] and n not in x_hold[y]]
-                        if len(pos_hold) == 1:
-                            board[y][x] = pos_hold[0]
-                            x_hold[y].append(board[y][x])
-                            y_hold[x].append(board[y][x])
-                            s_hold[(x // square) + ((y // square) * square)].append(board[y][x])
-                            p_board[-1].append([])
-                        else:
-                            p_board[-1].append(pos_hold)
+class SolveSudoku:
+    def __init__(self, board, square=3):
+        self.square = square #Size of small inner square
+        self.x_hold = {} #Row hold
+        self.y_hold = {} #Column hold
+        self.s_hold = {} #Subgrid hold
+        self.empty = [] #Empty square index
+        self.p_nums = [str(i + 1) for i in range(len(board))] #Possible numbers
+        self.board = board #Game board
+        self.solve_game()
+        
+    def solve_game(self):
+        #Find empty squares
+        for y in range(len(self.board)):
+            for x in range(len(self.board[y])):
+                if self.board[y][x] != '.':
+                    if y in self.x_hold:
+                        self.x_hold[y].append(self.board[y][x])
                     else:
-                        p_board[-1].append([])
-    board = search_tree(p_board, board, x_hold, y_hold, s_hold, p_nums=p_nums, square=square, y=0, x=0)
-    return board
+                        self.x_hold[y] = [self.board[y][x]]
+                    if x in self.y_hold:
+                        self.y_hold[x].append(self.board[y][x])
+                    else:
+                        self.y_hold[x] = [self.board[y][x]]
+                    if (x // self.square) + ((y // self.square) * self.square) in self.s_hold:
+                        self.s_hold[(x // self.square) + ((y // self.square) * self.square)].append(self.board[y][x])
+                    else:
+                        self.s_hold[(x // self.square) + ((y // self.square) * self.square)] = [self.board[y][x]]
+                else:
+                    self.empty.append((x, y))
+        self.search_tree()
+
+    def search_tree(self):
+        if len(self.empty) == 0: #If there are no more empty squares
+            return True
+        x, y = self.empty[0]
+        s = (x // self.square) + ((y // self.square) * self.square)
+        for p in self.p_nums:
+            if (y not in self.x_hold or p not in self.x_hold[y]) and (x not in self.y_hold or p not in self.y_hold[x]) and (s not in self.s_hold or p not in self.s_hold[s]):
+                self.board[y][x] = p
+                if y in self.x_hold:
+                    self.x_hold[y].append(p)
+                else:
+                    self.x_hold[y] = [p]
+                if x in self.y_hold:
+                    self.y_hold[x].append(p)
+                else:
+                    self.y_hold[x] = [p]
+                if s in self.s_hold:
+                    self.s_hold[s].append(p)
+                else:
+                    self.s_hold[s] = [p]
+                self.empty = self.empty[1:]
+                if self.search_tree():
+                    return True
+                else:
+                    #Backtrack to previous node in tree
+                    self.board[y][x] = '.'
+                    self.x_hold[y] = self.x_hold[y][:-1]
+                    self.y_hold[x] = self.y_hold[x][:-1]
+                    self.s_hold[s] = self.s_hold[s][:-1]
+                    self.empty.insert(0, (x, y))
+        return False
 
 print(np.array(m_board))
 print()
-solution = solve_game(m_board)
+SolveSudoku(m_board) #Solve game in place
+print(np.array(m_board))

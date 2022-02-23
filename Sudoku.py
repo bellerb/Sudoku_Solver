@@ -1,4 +1,3 @@
-import numpy as np
 from random import shuffle
 
 class Sudoku:
@@ -58,12 +57,3 @@ class Sudoku:
             i_amt = choices(i_choice, k=1)[0]
             i_pos = choices(p_nums, k=i_amt)
             self.board[y] = ['.' if i not in i_pos else x for i, x in enumerate(self.board[y])]
-
-game = Sudoku()
-
-solution = game.board
-print(np.array(solution))
-game.mask_board([5,8])
-m_board = game.board
-print()
-print(np.array(m_board))

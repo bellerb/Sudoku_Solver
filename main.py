@@ -35,6 +35,6 @@ if option == 0:
 elif option == 1:
   for y in range(9):
     for x in range(9):
-      game.board[y][x] = input(f'x = {x}\ny = {y}\nPlease input the square. (* = blank & 1-9)')
+      game.board[y][x] = input(f'x = {x}\ny = {y}\nPlease input the square. ("." = blank & 1-9)')
   SolveSudoku(game.board)
   print(np.array(game.board))

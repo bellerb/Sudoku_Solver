@@ -27,3 +27,4 @@ step 6: type in the action you wish to perform.
 
 # Write Up
 To get a better understanding of why the code is written this way check out my detailed write up:
+* https://medium.com/@bellerb/sudoku-solver-48cb2744fbd4

@@ -1,4 +1,5 @@
-from random import shuffle
+from math import ceil
+from random import shuffle, choices
 
 class Sudoku:
     def __init__(self, size=9, square=3):
@@ -51,9 +52,16 @@ class Sudoku:
                     self.board[y][x] = '.'
         return False
     
-    def mask_board(self, i_choice = [1, 3]):
+    def mask_board(self, i_choice = [2, 3], hints=17):
+        h_count = 0
         p_nums = [i for i in range(self.size)]
-        for y in range(self.size):
+        for y in range(len(self.board)):
             i_amt = choices(i_choice, k=1)[0]
-            i_pos = choices(p_nums, k=i_amt)
+            if h_count + i_amt > hints:
+                i_amt = hints - h_count
+            elif i_amt < (hints - h_count) // (9 - y):
+                i_amt = ceil((hints - h_count) / (9 - y))
+            shuffle(p_nums)
+            i_pos = p_nums[:i_amt]
             self.board[y] = ['.' if i not in i_pos else x for i, x in enumerate(self.board[y])]
+            h_count += i_amt
